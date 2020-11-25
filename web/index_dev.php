@@ -3,5 +3,5 @@
 require '../bootstrap.php';
 require '../MiniBlogApplication.php';
 
-$app = new MiniBlogApplication();
+$app = new MiniBlogApplication(true);
 $app->run();

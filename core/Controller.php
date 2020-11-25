@@ -9,6 +9,7 @@ abstract class Controller
   protected $response;
   protected $session;
   protected $db_manager;
+  protected $auth_actions;
 
   
   public function __construct($application)
@@ -19,7 +20,7 @@ abstract class Controller
     $this->request     = $application->getRequest();
     $this->response    = $application->getResponse();
     $this->session     = $application->getSession();
-    $this->db_manager  = $application->getDbManaget();
+    $this->db_manager  = $application->getDbManager();
   }
 
 
@@ -29,7 +30,7 @@ abstract class Controller
 
     $action_method = $action .'Action';
     if(!method_exists($this, $action_method)){
-      $this->forward04();
+      $this->forward404();
     }
 
     if($this->needsAuthentication($action) && !$this->session->isAuthenticated())
@@ -98,13 +99,13 @@ abstract class Controller
 
   protected function generateCsrfToken($form_name)
   {
-    $key = 'csrf_tokens/' .$from_name;
+    $key = 'csrf_tokens/' .$form_name;
     $tokens = $this->session->get($key, array());
     if(count($tokens) >= 10){
       array_shift($tokens);
     }
 
-    $token = sha1($form_name . session_if() .microtime());
+    $token = sha1($form_name . session_id() .microtime());
     $tokens[] = $token;
 
     $this->session->set($key, $tokens);

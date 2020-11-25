@@ -18,6 +18,28 @@ abstract class Application
   }
 
 
+  public function debug($str){
+    //ログを取るか
+    ini_set('log_errors','on');
+    //ログの出力ファイルを指定
+    ini_set('error_log','php.log');
+    if(!empty($this->debug)){
+      error_log('デバッグ：'.$str);
+    }
+  }
+
+
+  public function debugP($str){
+    //ログを取るか
+    ini_set('log_errors','on');
+    //ログの出力ファイルを指定
+    ini_set('error_log','php.log');
+    if(!empty($this->debug)){
+      error_log('デバッグP：'.print_r($str,true));
+    }
+  }
+
+
   protected function setDebugMode($debug)
   {
     if($debug){
@@ -37,7 +59,7 @@ abstract class Application
     $this->response = new Response();
     $this->session = new Session();
     $this->db_manager = new DbManager();
-    $this->router = new Router($this->registerRouters());
+    $this->router = new Router($this->registerRoutes());
   }
 
 
@@ -109,26 +131,27 @@ abstract class Application
   {
     try{
       $params = $this->router->resolve($this->request->getPathInfo());
+
       if($params === false){
         // todo-A
-        throw new HttpNotFoundException('No route found for' .$this->request->getpathInfo());
+        throw new HttpNotFoundException('No route found for ' .$this->request->getPathInfo());
       }
 
-      $controller = $params['controller'];
-      $action = $params['action'];
+        $controller = $params['controller'];
+        $action = $params['action'];
 
-      $this->runAction($controller, $action, $params);
-
-      $this->response->send();
+        $this->runAction($controller, $action, $params);
 
     } catch (HttpNotFoundException $e){
-      $this->render404page($e);
+        $this->render404page($e);
 
     } catch (UnauthorizedActionException $e){
-      list($cntroller, $action) = $this->login_action;
-      $this->runAction($controller, $action);
+        list($cntroller, $action) = $this->login_action;
+        $this->runAction($controller, $action);
       
     }
+
+    $this->response->send();
   }
 
 
@@ -139,12 +162,38 @@ abstract class Application
     $controller = $this->findController($controller_class);
     if($controller === false){
       // todo-B
-      throw new HttpNotFoundException($controller_class .'controller is not found.');
+      throw new HttpNotFoundException($controller_class .' controller is not found.');
     }
 
-    $content = $this->findController($controller_class);
+    $content = $controller->run($action, $params);
+    // $content = $this->findController($controller_class);
 
     $this->response->setContent($content);
+  }
+
+
+  protected function render404Page($e)
+  {
+    $this->response->setStatusCode(404, 'Not Found');
+    $message = $this->isDebugMode() ? $e->getMessage() : 'Page not found.';
+    $message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
+
+
+    $this->response->setContent(<<<EOF
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>404</title>
+</head>
+<body>
+    {$message}
+</body>
+</html>
+EOF
+    );
+
   }
 
 

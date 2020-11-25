@@ -65,7 +65,7 @@ class Request
     $request_uri = $this->getRequestUri();
 
     if(0 === strpos($request_uri, $script_name)){
-      return $sctipt_name;
+      return $script_name;
     }else if(0 === strpos($request_uri, dirname($script_name))){
       return rtrim(dirname($script_name), '/');
     }
@@ -77,7 +77,7 @@ class Request
   public function getPathInfo()
   {
     $base_url = $this->getBaseUrl();
-    $request_url = $this->getRequestUri();
+    $request_uri = $this->getRequestUri();
 
     if(false !== ($pos = strpos($request_uri, '?'))){
       $request_uri = substr($request_uri, 0, $pos);
